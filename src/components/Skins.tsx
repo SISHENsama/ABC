@@ -14,15 +14,33 @@ export default function Skins({ user }: SkinsProps) {
 
   useEffect(() => {
     if (canvasRef.current && !viewerRef.current) {
-      viewerRef.current = new skinview3d.SkinViewer({
+      const viewer = new skinview3d.SkinViewer({
         canvas: canvasRef.current,
         width: 300,
         height: 500,
         skin: currentSkin
       });
-      viewerRef.current.animations.add(skinview3d.IdleAnimation);
-      viewerRef.current.controls.enableZoom = true;
+      
+      // Safely add animation if available
+      if ((viewer as any).animations) {
+        (viewer as any).animations.add(skinview3d.IdleAnimation);
+      } else if ((viewer as any).animation) {
+        (viewer as any).animation = new (skinview3d.IdleAnimation as any)();
+      }
+      
+      if (viewer.controls) {
+        viewer.controls.enableZoom = true;
+      }
+      
+      viewerRef.current = viewer;
     }
+
+    return () => {
+      if (viewerRef.current) {
+        viewerRef.current.dispose();
+        viewerRef.current = null;
+      }
+    };
   }, []);
 
   useEffect(() => {
